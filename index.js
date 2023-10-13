@@ -1,54 +1,199 @@
-const puppeteer = require('puppeteer')
-const express = require('express')
+import call, { dial } from './call.js'
+import puppeteer from 'puppeteer'
+import express from 'express'
+import mongoose from 'mongoose'
+import twilio from 'twilio'
+
+// const puppeteer = require('puppeteer')
+// const express = require('express')
 const app = express()
 
-const bot = async () => {
+// connecting to mongoose
+// mongoose.set('strictQuery', false)
+// mongoose.connect('mongodb+srv://felixanderson500:Life1998@atlascluster.2rtpa.mongodb.net/toDoListDB', {
+//   useNewUrlParser: true,
+// })
+
+const itemSchema = {
+  name: String,
+  url: String,
+}
+// const Item = mongoose.model('Item', itemSchema)
+
+const bot = async (url) => {
   const browser = await puppeteer.launch({
     headless: false,
     args: ['--no-sandbox'],
   })
   const page = await browser.newPage()
   await page.goto(
+    // url
     // 'https://in.bookmyshow.com/trichy/cinemas/la-cinema-maris-complex-rgb-laser-trichy/LATG/20230119'
-    'https://in.bookmyshow.com/buytickets/m3gan-chennai/movie-chen-ET00343701-MT/20230118'
+    // 'https://in.bookmyshow.com/buytickets/varisu-trichy/movie-tric-ET00332034-MT/20230127'
+    // 'https://in.bookmyshow.com/buytickets/irugapatru-trichy/movie-tric-ET00370448-MT/20231012'
+    // 'https://in.bookmyshow.com/buytickets/the-road-trichy/movie-tric-ET00371295-MT/20231013'
+    'https://in.bookmyshow.com/buytickets/leo-trichy/movie-tric-ET00351731-MT/20231019'
+    // 'https://in.bookmyshow.com/buytickets/m3gan-bangalore/movie-bang-ET00343701-MT/20230118'
     //  'https://in.bookmyshow.com/buytickets/<movie>-trichy/movie-tric-<movie id>-MT/<date>'
+    //                                                                                yyyymmdd
   )
 
   /* Run javascript inside the page */
-  const data = await page.evaluate(() => {
-    const list = []
-    const items = 'de'
-    // const items = document.querySelector('a.nameSpan').innerHTML
+  try {
+    const data = await page.evaluate(() => {
+      const list = []
+      const bookingDate = document
+        .querySelector('div.slick-track')
+        .querySelector('li.slick-active')
+        .querySelector('.date-numeric').innerHTML
+      console.log(bookingDate)
+      const items = document.querySelector('#venuelist').querySelectorAll('li.list')
+      items.forEach((item) => {
+        list.push(item.querySelector('a.__venue-name').innerHTML)
+      })
+      return [list, bookingDate]
+    })
+    // console.log('at', data)
+    const excludedTheatres = [
+      // 'sona',
+      // 'maris',
+      // 'ramba',
+      // 'star',
+      // 'bhelec',
+      // 'jothi',
+      // 'megastar',
+      // 'venkatesa',
+      // 'mariyam',
+      // 'cauvery',
+      // 'saroja',
+      // 'shanthi',
+    ]
+    const [theatres, bookingDate] = data
 
-    // for (const item of items) {
-    //   list.push({
-    //     company: item.querySelector('.company h3').innerHTML,
-    //     position: item.querySelector('.company h2').innerHTML,
-    //     link: 'https://remoteok.io' + item.getAttribute('data-href'),
-    //   })
-    // }
+    // Booking date need to be mentioned
+    if (bookingDate.trim() == '19') {
+      theatres.forEach((theatre) => {
+        const triggerCall = excludedTheatres.every((exludeTheatre) => {
+          const excludeTheatrePattern = new RegExp(exludeTheatre, 'gim')
+          if (!theatre.match(excludeTheatrePattern)) return true
+          else return false
+        })
+        if (triggerCall) {
+          console.log('trigger')
+          alreadyTriggered = true
+          // ********
+          const accountSid = 'AC02b5548290e23eed6ab1cc6e992883dc'
+          // const authToken = process.env.TWILIO_AUTH_TOKEN
+          const authToken = '60abcf35da724a50591ceb93466444c6'
 
-    return items
+          // const client = require('twilio')(accountSid, authToken)
+          const client = new twilio(accountSid, authToken)
 
-    // return list
-  })
+          client.calls
+            .create({
+              url: 'http://demo.twilio.com/docs/voice.xml',
+              to: '+919042575202',
+              // from: '+12232178772',
+              from: '+16508256350',
+            })
+            .then((call) => console.log(call.sid))
+            .catch((err) => console.log(err))
+          // /********** *
+        } else {
+          console.log('Excluded theatres', new Date().toLocaleTimeString())
+        }
+      })
+    } else {
+      console.log('Booking date not same', new Date().toLocaleTimeString())
+    }
 
-  console.log(data)
-  // await browser.close()
-  return data
+    browser.close()
+    return data
+  } catch (err) {
+    console.log(err)
+    console.log('not exist ')
+  }
+  // console.log(data)
+  await browser.close()
 }
 
 app.get('/ticket', async (req, res) => {
-  const theatre = await bot()
+  call()
+  dial()
+  // const theatre = await bot()
   // res.send('theatre', theatre)
-  res.send(theatre)
+  setInterval(async () => {
+    let url
+    Item.find({ name: 'Eat burger15' }, async (err, docs) => {
+      if (err) {
+        console.log(err)
+      } else {
+        url = docs[0].url
+        console.log(url)
+        const data = await bot(url)
+        console.log(data)
+      }
+    })
+    console.log(url)
+    // await url
+  }, 60000)
+  // res.send(theatre)
 })
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 5000
 app.listen(PORT, (err) => {
   if (err) {
     throw err
   }
   console.log('Listening on port', PORT)
 })
+
+// setInterval(async () => {
+bot('hello')
+const allTheatres = [
+  'la cinema maris complex rgb laser: trichy',
+  'la cinema sona mina rgb laser: trichy',
+  'ramba a/c dolby atmos: trichy',
+  'star theatre a/c dts: trichy',
+  'bhelec cinema a/c dolby 7.1: trichy',
+  'jothi theatre a/c 4k 7.1 (viralimalai): trichy',
+  'megastar cinemas: premium large format (plf) atmos',
+  'sri venkatesa cinemas a/c dolby atmos',
+  'mariyam cinemas a/c 4k: trichy',
+  'cauvery cinemas a/c dolby 7.2',
+  'saroja cinemas 2k a/c, ariyamangalam: trichy',
+  'shanthi cinemas a/c 4k dolby atmos: thiruverumbur',
+]
+// const excludedTheatres = [
+//   'sona',
+//   'maris',
+//   'ramba',
+//   'star',
+//   'bhelec',
+//   'jothi',
+//   'megastar',
+//   'venkatesa',
+//   'mariyam',
+//   'cauvery',
+//   'saroja',
+//   'shanthi',
+// ]
+// allTheatres.forEach((theatre) => {
+//   console.log(
+//     'call',
+//     excludedTheatres.every((exludeTheatre) => {
+//       const excludeTheatrePattern = new RegExp(exludeTheatre, 'gim')
+//       if (!theatre.match(excludeTheatrePattern)) return true
+//       else return false
+//     })
+//   )
+// })
+// await url
+// }, 15000)
+var alreadyTriggered = false
+setInterval(() => {
+  if (!alreadyTriggered) {
+    bot('hello')
+  }
+}, 60000)
 
 // https://flaviocopes.com/puppeteer-scraping/
