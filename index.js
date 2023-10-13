@@ -43,12 +43,12 @@ const bot = async (url) => {
     const data = await page.evaluate(() => {
       const list = []
       const bookingDate = document
-        .querySelector('div.slick-track')
-        .querySelector('li.slick-active')
-        .querySelector('.date-numeric').innerHTML
+        ?.querySelector('div.slick-track')
+        ?.querySelector('li.slick-active')
+        ?.querySelector('.date-numeric').innerHTML
       console.log(bookingDate)
-      const items = document.querySelector('#venuelist').querySelectorAll('li.list')
-      items.forEach((item) => {
+      const items = document.querySelector('#venuelist')?.querySelectorAll('li.list')
+      items?.forEach((item) => {
         list.push(item.querySelector('a.__venue-name').innerHTML)
       })
       return [list, bookingDate]
@@ -71,8 +71,8 @@ const bot = async (url) => {
     const [theatres, bookingDate] = data
 
     // Booking date need to be mentioned
-    if (bookingDate.trim() == '19') {
-      theatres.forEach((theatre) => {
+    if (bookingDate?.trim() == '19') {
+      theatres?.forEach((theatre) => {
         const triggerCall = excludedTheatres.every((exludeTheatre) => {
           const excludeTheatrePattern = new RegExp(exludeTheatre, 'gim')
           if (!theatre.match(excludeTheatrePattern)) return true
@@ -84,7 +84,7 @@ const bot = async (url) => {
           // ********
           const accountSid = 'AC02b5548290e23eed6ab1cc6e992883dc'
           // const authToken = process.env.TWILIO_AUTH_TOKEN
-          const authToken = '60abcf35da724a50591ceb93466444c6'
+          const authToken = '266faa79b4b1696569b01fc155ed63f2'
 
           // const client = require('twilio')(accountSid, authToken)
           const client = new twilio(accountSid, authToken)
@@ -103,8 +103,10 @@ const bot = async (url) => {
           console.log('Excluded theatres', new Date().toLocaleTimeString())
         }
       })
-    } else {
+    } else if (bookingDate) {
       console.log('Booking date not same', new Date().toLocaleTimeString())
+    } else {
+      console.log('Booking not started', new Date().toLocaleTimeString())
     }
 
     browser.close()
