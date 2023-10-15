@@ -25,98 +25,105 @@ const bot = async (url) => {
     headless: false,
     args: ['--no-sandbox'],
   })
-  const page = await browser.newPage()
-  await page.goto(
-    // url
-    // 'https://in.bookmyshow.com/trichy/cinemas/la-cinema-maris-complex-rgb-laser-trichy/LATG/20230119'
-    // 'https://in.bookmyshow.com/buytickets/varisu-trichy/movie-tric-ET00332034-MT/20230127'
-    // 'https://in.bookmyshow.com/buytickets/irugapatru-trichy/movie-tric-ET00370448-MT/20231012'
-    // 'https://in.bookmyshow.com/buytickets/the-road-trichy/movie-tric-ET00371295-MT/20231013'
-    'https://in.bookmyshow.com/buytickets/leo-trichy/movie-tric-ET00351731-MT/20231019'
-    // 'https://in.bookmyshow.com/buytickets/m3gan-bangalore/movie-bang-ET00343701-MT/20230118'
-    //  'https://in.bookmyshow.com/buytickets/<movie>-trichy/movie-tric-<movie id>-MT/<date>'
-    //                                                                                yyyymmdd
-  )
-
-  /* Run javascript inside the page */
   try {
-    const data = await page.evaluate(() => {
-      const list = []
-      const bookingDate = document
-        ?.querySelector('div.slick-track')
-        ?.querySelector('li.slick-active')
-        ?.querySelector('.date-numeric').innerHTML
-      console.log(bookingDate)
-      const items = document.querySelector('#venuelist')?.querySelectorAll('li.list')
-      items?.forEach((item) => {
-        list.push(item.querySelector('a.__venue-name').innerHTML)
-      })
-      return [list, bookingDate]
-    })
-    // console.log('at', data)
-    const excludedTheatres = [
-      // 'sona',
-      // 'maris',
-      // 'ramba',
-      // 'star',
-      // 'bhelec',
-      // 'jothi',
-      // 'megastar',
-      // 'venkatesa',
-      // 'mariyam',
-      // 'cauvery',
-      // 'saroja',
-      // 'shanthi',
-    ]
-    const [theatres, bookingDate] = data
+    const page = await browser.newPage()
+    await page.goto(
+      // url
+      // 'https://in.bookmyshow.com/trichy/cinemas/la-cinema-maris-complex-rgb-laser-trichy/LATG/20230119'
+      // 'https://in.bookmyshow.com/buytickets/varisu-trichy/movie-tric-ET00332034-MT/20230127'
+      // 'https://in.bookmyshow.com/buytickets/irugapatru-trichy/movie-tric-ET00370448-MT/20231012'
+      // 'https://in.bookmyshow.com/buytickets/the-road-trichy/movie-tric-ET00371295-MT/20231013'
+      'https://in.bookmyshow.com/buytickets/leo-trichy/movie-tric-ET00351731-MT/20231019',
+      // 'https://in.bookmyshow.com/buytickets/m3gan-bangalore/movie-bang-ET00343701-MT/20230118'
+      //  'https://in.bookmyshow.com/buytickets/<movie>-trichy/movie-tric-<movie id>-MT/<date>'
+      //                                                                                yyyymmdd
+      { waitUntil: 'load' }
+    )
 
-    // Booking date need to be mentioned
-    if (bookingDate?.trim() == '19') {
-      theatres?.forEach((theatre) => {
-        const triggerCall = excludedTheatres.every((exludeTheatre) => {
-          const excludeTheatrePattern = new RegExp(exludeTheatre, 'gim')
-          if (!theatre.match(excludeTheatrePattern)) return true
-          else return false
+    /* Run javascript inside the page */
+    try {
+      const data = await page.evaluate(() => {
+        const list = []
+        const bookingDate = document
+          ?.querySelector('div.slick-track')
+          ?.querySelector('li.slick-active')
+          ?.querySelector('.date-numeric').innerHTML
+        console.log(bookingDate)
+        const items = document.querySelector('#venuelist')?.querySelectorAll('li.list')
+        items?.forEach((item) => {
+          list.push(item.querySelector('a.__venue-name').innerHTML)
         })
-        if (triggerCall) {
-          console.log('trigger')
-          alreadyTriggered = true
-          // ********
-          const accountSid = 'AC02b5548290e23eed6ab1cc6e992883dc'
-          // const authToken = process.env.TWILIO_AUTH_TOKEN
-          const authToken = '266faa79b4b1696569b01fc155ed63f2'
-
-          // const client = require('twilio')(accountSid, authToken)
-          const client = new twilio(accountSid, authToken)
-
-          client.calls
-            .create({
-              url: 'http://demo.twilio.com/docs/voice.xml',
-              to: '+919042575202',
-              // from: '+12232178772',
-              from: '+16508256350',
-            })
-            .then((call) => console.log(call.sid))
-            .catch((err) => console.log(err))
-          // /********** *
-        } else {
-          console.log('Excluded theatres', new Date().toLocaleTimeString())
-        }
+        return [list, bookingDate]
       })
-    } else if (bookingDate) {
-      console.log('Booking date not same', new Date().toLocaleTimeString())
-    } else {
-      console.log('Booking not started', new Date().toLocaleTimeString())
-    }
+      // console.log('at', data)
+      const excludedTheatres = [
+        'sona',
+        'maris',
+        'ramba',
+        // 'star',
+        // 'bhelec',
+        // 'jothi',
+        'megastar',
+        // 'venkatesa',
+        // 'mariyam',
+        // 'cauvery',
+        // 'saroja',
+        // 'shanthi',
+        'moorthys',
+      ]
+      const [theatres, bookingDate] = data
 
-    browser.close()
-    return data
-  } catch (err) {
-    console.log(err)
-    console.log('not exist ')
+      // Booking date need to be mentioned
+      if (bookingDate?.trim() == '19') {
+        theatres?.forEach((theatre) => {
+          const triggerCall = excludedTheatres.every((exludeTheatre) => {
+            const excludeTheatrePattern = new RegExp(exludeTheatre, 'gim')
+            if (!theatre.match(excludeTheatrePattern)) return true
+            else return false
+          })
+          if (triggerCall) {
+            console.log('trigger')
+            alreadyTriggered = true
+            // ********
+            const accountSid = 'AC02b5548290e23eed6ab1cc6e992883dc'
+            // const authToken = process.env.TWILIO_AUTH_TOKEN
+            const authToken = '266faa79b4b1696569b01fc155ed63f2'
+
+            // const client = require('twilio')(accountSid, authToken)
+            const client = new twilio(accountSid, authToken)
+
+            client.calls
+              .create({
+                url: 'http://demo.twilio.com/docs/voice.xml',
+                to: '+919042575202',
+                // from: '+12232178772',
+                from: '+16508256350',
+              })
+              .then((call) => console.log(call.sid))
+              .catch((err) => console.log(err))
+            // /********** *
+          } else {
+            console.log('Excluded theatres', new Date().toLocaleTimeString())
+          }
+        })
+      } else if (bookingDate) {
+        console.log('Booking date not same', new Date().toLocaleTimeString())
+      } else {
+        console.log('Booking not started', new Date().toLocaleTimeString())
+      }
+
+      browser.close()
+      return data
+    } catch (err) {
+      console.log(err)
+      console.log('not exist ')
+    }
+    // console.log(data)
+    await browser.close()
+  } catch (error) {
+    console.log('error due to', error)
+    await browser.close()
   }
-  // console.log(data)
-  await browser.close()
 }
 
 app.get('/ticket', async (req, res) => {
