@@ -87,7 +87,7 @@ const bot = async (url) => {
             // ********
             const accountSid = 'AC02b5548290e23eed6ab1cc6e992883dc'
             // const authToken = process.env.TWILIO_AUTH_TOKEN
-            const authToken = '266faa79b4b1696569b01fc155ed63f2'
+            const authToken = '564b58dff0874b18849c8373aa7183b0'
 
             // const client = require('twilio')(accountSid, authToken)
             const client = new twilio(accountSid, authToken)
