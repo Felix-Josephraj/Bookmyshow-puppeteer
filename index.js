@@ -57,13 +57,13 @@ const bot = async (url) => {
       })
       // console.log('at', data)
       const excludedTheatres = [
-        'sona',
-        'maris',
-        'ramba',
+        // 'sona',
+        // 'maris',
+        // 'ramba',
         // 'star',
         // 'bhelec',
         // 'jothi',
-        'megastar',
+        // 'megastar',
         // 'venkatesa',
         // 'mariyam',
         // 'cauvery',
